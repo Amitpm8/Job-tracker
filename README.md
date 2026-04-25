@@ -4,7 +4,7 @@ A full-stack job application tracking app, fully containerized with Docker.
 
 ## Preview
 
-![Dashboard](assets/dashboard.png)<img width="1276" height="967" alt="Screenshot 2026-04-25 092148" src="https://github.com/user-attachments/assets/e9596d13-021c-4153-bcda-568ca4ef62a1" />
+![](assets/dashboard.png)<img width="1276" height="967" alt="Screenshot 2026-04-25 092148" src="https://github.com/user-attachments/assets/e9596d13-021c-4153-bcda-568ca4ef62a1" />
 
 
 ## Tech Stack
