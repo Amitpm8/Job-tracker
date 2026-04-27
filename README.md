@@ -1,4 +1,3 @@
-<img width="1640" height="959" alt="ChatGPT Image Apr 27, 2026, 03_42_50 PM" src="https://github.com/user-attachments/assets/c08a5f4a-b117-444c-8ca7-396712a87ae8" />
 # Job Tracker — Production Kubernetes Platform on AWS EKS
 
 ## What I Built
