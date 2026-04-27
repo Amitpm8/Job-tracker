@@ -3,6 +3,12 @@
 ## What I Built
 A production-grade deployment platform for a full-stack Job Tracker application (React + Flask + PostgreSQL) running on AWS EKS with GitOps, CI/CD, auto-scaling, and full observability.
 
+
+<img width="1871" height="909" alt="Screenshot 2026-04-27 153732" src="https://github.com/user-attachments/assets/4d2ed7df-7db0-4392-9579-4f4d6aa30335" />
+<img width="1521" height="963" alt="Screenshot 2026-04-27 153639" src="https://github.com/user-attachments/assets/36beb37e-0587-4dfa-a22e-50793b6929b4" />
+<img width="1729" height="909" alt="Screenshot 2026-04-27 153510" src="https://github.com/user-attachments/assets/b6219082-f172-428c-8b7c-cdd6292dfb35" />
+<img width="1709" height="953" alt="Screenshot 2026-04-27 153442" src="https://github.com/user-attachments/assets/c39397b1-979a-4c3f-bcc5-0ff632ae1d2f" />
+
 ## Architecture
 Developer pushes code
 ↓
