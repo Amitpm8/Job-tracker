@@ -1,74 +1,72 @@
-# Job Tracker
+# Job Tracker — Production Kubernetes Platform on AWS EKS
 
-A full-stack job application tracking app, fully containerized with Docker.
-
-## Preview
-
-![](assets/dashboard.png)<img width="1276" height="967" alt="Screenshot 2026-04-25 092148" src="https://github.com/user-attachments/assets/e9596d13-021c-4153-bcda-568ca4ef62a1" />
-
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React + Vite + Nginx |
-| Backend | Flask + SQLAlchemy + Gunicorn |
-| Database | PostgreSQL 15 |
-| Container | Docker + Docker Compose |
-| CI/CD | GitHub Actions + Docker Hub |
+## What I Built
+A production-grade deployment platform for a full-stack Job Tracker application (React + Flask + PostgreSQL) running on AWS EKS with GitOps, CI/CD, auto-scaling, and full observability.
 
 ## Architecture
+Developer pushes code
+↓
+GitHub Actions (CI/CD)
 
-Browser → Nginx (port 80) → Flask API (port 5000) → PostgreSQL (port 5432)
+Builds Docker images
+Pushes to AWS ECR
+Updates k8s manifests
+↓
+Argo CD (GitOps)
+Detects manifest changes
+Auto-syncs to EKS cluster
+↓
+EKS Cluster (ap-south-1)
+backend (Flask API) — HPA enabled
+frontend (React + Nginx)
+postgres (PostgreSQL 15)
+↓
+Prometheus + Grafana
+Live metrics and dashboards
 
-All services run in isolated containers on a private Docker bridge network.
-Only port 80 is exposed to the outside world.
 
-## Quick Start
+## Problems This Solves
+| Problem | Solution |
+|---------|----------|
+| Single server = single point of failure | EKS runs pods across multiple nodes |
+| Manual deployments = human error | Argo CD GitOps — Git is source of truth |
+| Traffic spikes crash the server | HPA scales pods automatically at 60% CPU |
+| No visibility into system health | Prometheus scrapes metrics, Grafana visualizes |
+| Inconsistent builds | GitHub Actions standardizes every build |
 
+## Tech Stack
+- **AWS EKS** — managed Kubernetes cluster
+- **AWS ECR** — private Docker registry
+- **Argo CD** — GitOps continuous deployment
+- **GitHub Actions** — CI/CD pipeline
+- **Helm** — package manager for Kubernetes
+- **Prometheus + Grafana** — monitoring and alerting
+- **HPA** — Horizontal Pod Autoscaler
+
+## Key Results
+- Zero-downtime deployments via rolling updates
+- Auto-scaling proven: CPU hit 183% under load, HPA triggered scale-out
+- Full GitOps: no manual kubectl apply in production
+- 15+ Kubernetes dashboards in Grafana out of the box
+
+## How to Deploy
 ```bash
-git clone https://github.com/Amitpm8/Job-tracker.git
-cd Job-tracker
-cp .env.example .env
-# Edit .env with your values
-docker compose up --build
+# 1. Create EKS cluster
+eksctl create cluster --name job-tracker-cluster --region ap-south-1 --node-type t3.small --nodes 3 --managed
+
+# 2. Deploy application
+kubectl apply -f k8s/base/
+
+# 3. Install Argo CD
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -f argocd/application.yaml
+
+# 4. Install monitoring
+helm install monitoring prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
 ```
 
-Open `http://localhost` in your browser.
-
-## Docker Concepts Covered
-
-- Dockerfile layer caching optimization
-- Multi-stage builds (Node → Nginx, 900MB → 25MB)
-- Docker Compose service networking
-- Named volumes for data persistence
-- Healthchecks with `depends_on: condition: service_healthy`
-- Environment variable injection at runtime
-- CI/CD pipeline with GitHub Actions + Docker Hub registry
-- Image tagging strategy (`:latest` + `:git-sha` for rollback)
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/jobs | Get all jobs |
-| POST | /api/jobs | Add new job |
-| PUT | /api/jobs/:id | Update job |
-| DELETE | /api/jobs/:id | Delete job |
-| GET | /api/stats | Get dashboard stats |
-
-## CI/CD Pipeline
-
-Every push to `main` branch:
-1. Builds backend and frontend Docker images
-2. Pushes to Docker Hub with `:latest` and `:git-sha` tags
-3. Layer caching keeps builds under 30 seconds
-
-## Local Development
-
-```bash
-docker compose logs -f backend    # Flask logs
-docker compose logs -f db         # Postgres logs
-docker compose ps                 # Container status
-docker exec -it job-tracker-backend-1 bash  # Shell into backend
-```
+## What I Learned
+- How GitOps eliminates deployment risk by making Git the single source of truth
+- How HPA and Cluster Autoscaler work together to handle traffic spikes
+- How Prometheus scrapes metrics and why pull-based monitoring is more reliable than push
+- Real debugging: pod scheduling failures due to node capacity limits on t3.micro vs t3.small
