@@ -1,0 +1,46 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: 877009927064.dkr.ecr.ap-south-1.amazonaws.com
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to ECR
+      run: |
+        aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+    - name: Build and push backend
+      run: |
+        docker build -t $ECR_REGISTRY/job-tracker-backend:${{ github.sha }} ./backend
+        docker push $ECR_REGISTRY/job-tracker-backend:${{ github.sha }}
+
+    - name: Build and push frontend
+      run: |
+        docker build -t $ECR_REGISTRY/job-tracker-frontend:${{ github.sha }} ./frontend
+        docker push $ECR_REGISTRY/job-tracker-frontend:${{ github.sha }}
+
+    - name: Update k8s manifests
+      run: |
+        sed -i "s|job-tracker-backend:latest|job-tracker-backend:${{ github.sha }}|" k8s/base/backend-deployment.yaml
+        sed -i "s|job-tracker-frontend:latest|job-tracker-frontend:${{ github.sha }}|" k8s/base/frontend-deployment.yaml
+        git config user.email "github-actions@github.com"
+        git config user.name "GitHub Actions"
+        git add k8s/base/
+        git commit -m "Update image tags to ${{ github.sha }}"
+        git push
