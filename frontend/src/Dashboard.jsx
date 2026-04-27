@@ -1,88 +1,135 @@
-import { useEffect, useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function Dashboard({ onEdit }) {
-  const [jobs, setJobs] = useState([])
-  const [stats, setStats] = useState({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [jobs, setJobs] = useState([]);
 
-  const fetchAll = async () => {
+  const fetchJobs = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const jobsRes = await axios.get("/api/jobs")
-      const statsRes = await axios.get("/api/stats")
-      setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : [])
-      setStats(statsRes.data)
-    } catch (err) {
-      setError("Failed to load. Is the API running?")
-      setJobs([])
-    } finally {
-      setLoading(false)
+      const res = await axios.get("/api/jobs");
+      setJobs(res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error);
+      setJobs([]);
     }
-  }
+  };
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this application?")) return
-    try {
-      await axios.delete(`/api/jobs/${id}`)
-      setJobs(prev => prev.filter(j => j.id !== id))
-    } catch {
-      alert("Delete failed.")
-    }
-  }
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this application?"
+    );
 
-  const statusColors = {
-    applied: "#3b82f6",
-    interview: "#f59e0b",
-    offer: "#10b981",
-    rejected: "#ef4444"
-  }
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/jobs/${id}`);
+      fetchJobs();
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  };
+
+  const counts = {
+    applied: jobs.filter((job) => job.status === "applied").length,
+    interview: jobs.filter((job) => job.status === "interview").length,
+    offer: jobs.filter((job) => job.status === "offer").length,
+    rejected: jobs.filter((job) => job.status === "rejected").length,
+  };
 
   return (
-    <div className="dashboard">
-      <h2>Overview</h2>
-      <div className="stats-grid">
-        <div className="stat-card"><span>{stats.total ?? 0}</span><label>Total</label></div>
-        <div className="stat-card"><span>{stats.applied ?? 0}</span><label>Applied</label></div>
-        <div className="stat-card"><span>{stats.interview ?? 0}</span><label>Interview</label></div>
-        <div className="stat-card"><span>{stats.offer ?? 0}</span><label>Offers</label></div>
-      </div>
+    <div className="dashboard-wrap">
+      <section className="stats-grid">
+        <div className="stat-card applied">
+          <p>Total Applied</p>
+          <h3>{counts.applied}</h3>
+        </div>
 
-      <h2 style={{marginTop: "2rem"}}>Applications ({jobs.length})</h2>
+        <div className="stat-card interview">
+          <p>Interviews</p>
+          <h3>{counts.interview}</h3>
+        </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{color: "red"}}>{error}</p>}
-      {!loading && !error && jobs.length === 0 && <p>No applications yet. Add your first job!</p>}
+        <div className="stat-card offer">
+          <p>Offers</p>
+          <h3>{counts.offer}</h3>
+        </div>
 
-      {!loading && !error && jobs.length > 0 && (
-        <table className="jobs-table">
-          <thead>
-            <tr>
-              <th>Company</th><th>Role</th><th>Status</th>
-              <th>Date</th><th>Notes</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {jobs.map(job => (
-              <tr key={job.id}>
-                <td>{job.link ? <a href={job.link} target="_blank" rel="noreferrer">{job.company}</a> : job.company}</td>
-                <td>{job.role}</td>
-                <td><span style={{background: statusColors[job.status], color: "#fff", padding: "2px 10px", borderRadius: "12px", fontSize: "12px"}}>{job.status}</span></td>
-                <td>{job.applied_date}</td>
-                <td>{job.notes || "—"}</td>
-                <td>
-                  <button onClick={() => onEdit(job)}>Edit</button>
-                  <button onClick={() => handleDelete(job.id)} style={{marginLeft: "8px", color: "red"}}>Delete</button>
-                </td>
+        <div className="stat-card rejected">
+          <p>Rejected</p>
+          <h3>{counts.rejected}</h3>
+        </div>
+      </section>
+
+      <section className="table-card">
+        <div className="table-header">
+          <div>
+            <h3>Applications</h3>
+            <p>{jobs.length} total records</p>
+          </div>
+        </div>
+
+        <div className="table-scroll">
+          <table className="jobs-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th className="text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+
+            <tbody>
+              {jobs.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="empty-state">
+                    No job applications found.
+                  </td>
+                </tr>
+              ) : (
+                jobs.map((job) => (
+                  <tr key={job._id}>
+                    <td>{job.company}</td>
+                    <td>{job.role}</td>
+                    <td>
+                      <span className={`status-pill ${job.status}`}>
+                        {job.status}
+                      </span>
+                    </td>
+                    <td>
+                      {job.date
+                        ? new Date(job.date).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="text-right">
+                      <div className="action-group">
+                        <button
+                          className="table-btn edit"
+                          onClick={() => onEdit(job)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="table-btn delete"
+                          onClick={() => handleDelete(job._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
-  )
+  );
 }

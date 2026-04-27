@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: job-tracker
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Amitpm8/Job-tracker
+    targetRevision: HEAD
+    path: k8s/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: job-tracker
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
