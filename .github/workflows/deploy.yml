@@ -11,8 +11,12 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
@@ -37,8 +41,8 @@ jobs:
 
     - name: Update k8s manifests
       run: |
-        sed -i "s|job-tracker-backend:latest|job-tracker-backend:${{ github.sha }}|" k8s/base/backend-deployment.yaml
-        sed -i "s|job-tracker-frontend:latest|job-tracker-frontend:${{ github.sha }}|" k8s/base/frontend-deployment.yaml
+        sed -i "s|job-tracker-backend:.*|job-tracker-backend:${{ github.sha }}|" k8s/base/backend-deployment.yaml
+        sed -i "s|job-tracker-frontend:.*|job-tracker-frontend:${{ github.sha }}|" k8s/base/frontend-deployment.yaml
         git config user.email "github-actions@github.com"
         git config user.name "GitHub Actions"
         git add k8s/base/
