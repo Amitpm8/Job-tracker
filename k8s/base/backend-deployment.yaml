@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: 877009927064.dkr.ecr.ap-south-1.amazonaws.com/job-tracker-backend:434ef5c555db2e47ed92c35025319e29a01fe893
+        image: 877009927064.dkr.ecr.ap-south-1.amazonaws.com/job-tracker-backend:4edfa727a8263d4fc1246dbadc0722ae64cc263d
         ports:
         - containerPort: 5000
         env:
